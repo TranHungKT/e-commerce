@@ -11,6 +11,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = {"id"})
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,5 +23,12 @@ public class Role {
     @Column(length = 150, nullable = false)
     private String description;
 
+    public Role(Integer id) {
+        this.id = id;
+    }
 
+    @Override
+    public String toString(){
+        return this.name;
+    }
 }
