@@ -1,5 +1,7 @@
 package com.ecommerce.admin.user;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.ecommerce.common.entity.Role;
 import com.ecommerce.common.entity.User;
 import org.junit.jupiter.api.Test;
@@ -41,5 +43,16 @@ public class UserRepositoryTest {
 
         User savedUser =  userRepository.save(userNgocAnh);
         assertNotEquals(savedUser.getId(), 0);
+    }
+
+    @Test
+    public void testGetUserByEmail(){
+        String email = "abc@def.com";
+        User user = userRepository.findUserByEmail(email);
+        assertNull(user);
+
+        String email2 = "hungtran@gmail.com";
+        User user2 = userRepository.findUserByEmail(email2);
+        assertNotNull(user2);
     }
 }

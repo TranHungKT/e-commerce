@@ -10,7 +10,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.ecommerce</groupId>
-	<artifactId>EcommerceWebParent</artifactId>
+	<artifactId>EcommerceWebParent</artifactId>d
 	<version>0.0.1-SNAPSHOT</version>
 	<name>EcommerceWebParent</name>
 	<description>EcommerceWebParent</description>
@@ -46,6 +46,10 @@
 			<version>3.2.1</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.webjars</groupId>
