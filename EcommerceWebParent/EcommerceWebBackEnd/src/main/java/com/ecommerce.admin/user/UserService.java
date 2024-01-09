@@ -3,11 +3,12 @@ package com.ecommerce.admin.user;
 import com.ecommerce.common.entity.Role;
 import com.ecommerce.common.entity.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,21 @@ public class UserService {
     }
 
     public void save(User user) {
-        encodePassword(user);
+        boolean isUpdatingUser = (user.getId() !=null);
+
+        if (isUpdatingUser) {
+            User existingUser = userRepository.findById(user.getId()).get();
+
+            if (user.getPassword().isEmpty()) {
+                user.setPassword(existingUser.getPassword());
+            } else {
+                encodePassword(user);
+            }
+
+        } else {
+            encodePassword(user);
+        }
+
         userRepository.save(user);
     }
 
@@ -34,10 +49,27 @@ public class UserService {
         user.setPassword(encodedPassword);
     }
 
-    public boolean isEmailUnique(String email){
+    public boolean isEmailUnique(Integer id, String email){
         User userByEmail = userRepository.findUserByEmail(email);
-        System.out.println("HEHEHEHEHEH");
-        System.out.println(userByEmail);
-        return userByEmail == null;
+
+        if(userByEmail == null) return true;
+
+        boolean isCreatingNew = (id == null);
+
+        if(isCreatingNew){
+          return false;
+        }else {
+            return Objects.equals(userByEmail.getId(), id);
+        }
+    }
+
+    public User get(Integer id) throws UserNotFoundException {
+            return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    public void delete(Integer id) throws UserNotFoundException {
+       userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+
+       userRepository.deleteById(id);
     }
 }

@@ -3,9 +3,13 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0">
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <title>Home - Ecommerce Admin</title>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/5.15.4/css/all.min.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/style.css}" />
+
+    <title>[[${pageTitle}]]</title>
 </head>
 <body>
 <div class="container-fluid">
@@ -58,11 +62,12 @@
         </nav>
     </div>
     <div>
-        <h2>Manage Users | Create New User</h2>
+        <h2>Manage Users | [[${pageTitle}]]</h2>
     </div>
 
     <form id="form_new_user" th:action="@{/users/save}" style="max-width: 700px; margin: 0 auto" method="post"
           th:object="${user}" onsubmit="return checkEmailUnique(event, this);">
+        <input type="hidden" th:field="*{id}"/>
         <div class="border border-secondary rounded p-3">
             <div class="form-group row">
                 <label class="col-sm-4 col-form-label">E-mail:</label>
@@ -91,8 +96,11 @@
             <div class="form-group row">
                 <label class="col-sm-4 col-form-label">Password:</label>
                 <div class="col-sm-8">
-                    <input type="password" class="form-control" th:field="*{password}" required minlength="8"
-                           maxlength="20"/>
+                    <input th:if="${user.id == null}" type="password" class="form-control"
+                           th:field="*{password}" required minlength="8" maxlength="20"/>
+
+                    <input th:if="${user.id != null}" type="password" class="form-control"
+                           th:field="*{password}" minlength="8" maxlength="20"/>
                 </div>
             </div>
 
@@ -160,16 +168,18 @@
         event.preventDefault();
         url = "[[@{/users/check_email}]]";
         userEmail = $("#email").val();
+        userId = $("#id").val();
         csrfValue = $("input[name='_csrf']").val();
-        params = {email: userEmail, _csrf: csrfValue};
+
+        params = {id: userId, email: userEmail, _csrf: csrfValue};
 
         $.post(url, params, function (response) {
-            if (response == "OK") {
+            if (response === "OK") {
                 form.submit();
-            } else if (response == "Duplicated") {
-                alert("There is another account with this email " + userEmail);
+            } else if (response === "Duplicated") {
+                showModalDialog("Warning", "There is another user having the email " + userEmail);
             } else {
-                alert("Unknown response from server");
+                showModalDialog("Error", "Unknown response from server");
             }
         }).fail(function () {
             alert("Could not connect to the server");
@@ -177,6 +187,13 @@
 
 
         return false;
+    }
+
+    function showModalDialog(title, message) {
+        $("#modalTitle").text(title);
+        $("#modalBody").text(message);
+        $("#modalDialog").modal();
+
     }
 
 </script>
