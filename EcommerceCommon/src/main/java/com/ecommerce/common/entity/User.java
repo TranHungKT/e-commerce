@@ -47,4 +47,11 @@ public class User {
     public void addRole(Role role) {
         this.roles.add(role);
     }
+
+    @Transient
+    public String getPhotosImagePath() {
+        if (id == null || photos == null) return "/images/default-user.png";
+
+        return "/images/" + this.id + "/" + this.photos;
+    }
 }

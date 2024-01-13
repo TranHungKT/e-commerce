@@ -4,7 +4,6 @@ import com.ecommerce.common.entity.Role;
 import com.ecommerce.common.entity.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +27,7 @@ public class UserService {
         return (List<Role>) roleRepository.findAll();
     }
 
-    public void save(User user) {
+    public User save(User user) {
         boolean isUpdatingUser = (user.getId() !=null);
 
         if (isUpdatingUser) {
@@ -44,7 +43,7 @@ public class UserService {
             encodePassword(user);
         }
 
-        userRepository.save(user);
+       return userRepository.save(user);
     }
 
     private void encodePassword(User user) {
