@@ -2,7 +2,9 @@ package com.ecommerce.admin.user;
 
 import com.ecommerce.common.entity.Role;
 import com.ecommerce.common.entity.User;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +13,7 @@ import java.util.Objects;
 
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
@@ -71,5 +74,9 @@ public class UserService {
        userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
 
        userRepository.deleteById(id);
+    }
+
+    public void updateUserEnabledStatus(Integer id, boolean enabled) {
+        userRepository.updateEnabledStatus(id, enabled);
     }
 }
