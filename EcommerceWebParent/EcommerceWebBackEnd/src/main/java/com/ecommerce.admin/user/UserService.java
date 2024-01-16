@@ -4,6 +4,10 @@ import com.ecommerce.common.entity.Role;
 import com.ecommerce.common.entity.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +19,8 @@ import java.util.Objects;
 @Transactional
 @RequiredArgsConstructor
 public class UserService {
+    public static final int USERS_PER_PAGE = 4;
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -23,12 +29,19 @@ public class UserService {
         return (List<User>) userRepository.findAll();
     }
 
+    public Page<User> listByPage(int pageNum, String sortField, String sortDir) {
+        Sort sort = Sort.by(sortField);
+        sort = sortDir.equals("asc") ? sort.ascending() : sort.descending();
+        Pageable pageable = PageRequest.of(pageNum - 1, USERS_PER_PAGE, sort);
+        return userRepository.findAll(pageable);
+    }
+
     public List<Role> listRoles() {
         return (List<Role>) roleRepository.findAll();
     }
 
     public User save(User user) {
-        boolean isUpdatingUser = (user.getId() !=null);
+        boolean isUpdatingUser = (user.getId() != null);
 
         if (isUpdatingUser) {
             User existingUser = userRepository.findById(user.getId()).get();
@@ -43,7 +56,7 @@ public class UserService {
             encodePassword(user);
         }
 
-       return userRepository.save(user);
+        return userRepository.save(user);
     }
 
     private void encodePassword(User user) {
@@ -51,28 +64,28 @@ public class UserService {
         user.setPassword(encodedPassword);
     }
 
-    public boolean isEmailUnique(Integer id, String email){
+    public boolean isEmailUnique(Integer id, String email) {
         User userByEmail = userRepository.findUserByEmail(email);
 
-        if(userByEmail == null) return true;
+        if (userByEmail == null) return true;
 
         boolean isCreatingNew = (id == null);
 
-        if(isCreatingNew){
-          return false;
-        }else {
+        if (isCreatingNew) {
+            return false;
+        } else {
             return Objects.equals(userByEmail.getId(), id);
         }
     }
 
     public User get(Integer id) throws UserNotFoundException {
-            return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
     public void delete(Integer id) throws UserNotFoundException {
-       userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+        userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
 
-       userRepository.deleteById(id);
+        userRepository.deleteById(id);
     }
 
     public void updateUserEnabledStatus(Integer id, boolean enabled) {
