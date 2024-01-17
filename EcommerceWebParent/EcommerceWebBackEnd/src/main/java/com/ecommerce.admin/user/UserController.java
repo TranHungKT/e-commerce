@@ -3,6 +3,7 @@ package com.ecommerce.admin.user;
 import com.ecommerce.admin.FileUploadUtil;
 import com.ecommerce.common.entity.Role;
 import com.ecommerce.common.entity.User;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
@@ -141,5 +142,27 @@ public class UserController {
         redirectAttributes.addFlashAttribute("message", message);
 
         return "redirect:/users";
+    }
+
+    @GetMapping("/users/export/csv")
+    public void exportToCsv(HttpServletResponse httpServletResponse) throws IOException {
+        List<User> listUsers = userService.listAll();
+        UserCsvExporter userCsvExporter = new UserCsvExporter();
+        userCsvExporter.export(listUsers, httpServletResponse);
+    }
+
+    @GetMapping("/users/export/excel")
+    public void exportToExcel(HttpServletResponse httpServletResponse) throws IOException {
+        List<User> listUsers = userService.listAll();
+        UserExcelExporter useExcelExporter = new UserExcelExporter();
+        useExcelExporter.export(listUsers, httpServletResponse);
+    }
+
+    @GetMapping("/users/export/pdf")
+    public void exportToPDF(HttpServletResponse response) throws IOException {
+        List<User> listUsers = userService.listAll();
+
+        UserPdfExporter exporter = new UserPdfExporter();
+        exporter.export(listUsers, response);
     }
 }
