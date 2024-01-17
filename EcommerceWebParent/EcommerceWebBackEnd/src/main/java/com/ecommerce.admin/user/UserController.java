@@ -27,12 +27,17 @@ public class UserController {
 
     @GetMapping("/users")
     public String listFirstPage(Model model) {
-        return listByPage(1, model, "firstName", "asc");
+        return listByPage(1, model, "firstName", "asc", null);
     }
 
     @GetMapping("/users/page/{pageNum}")
-    public  String listByPage(@PathVariable(name = "pageNum") int pageNum, Model model, @Param("sortField") String sortField, @Param("sortDir") String sortDir){
-        Page<User> pageUser = userService.listByPage(pageNum, sortField, sortDir);
+    public String listByPage(
+            @PathVariable(name = "pageNum") int pageNum,
+            Model model,
+            @Param("sortField") String sortField,
+            @Param("sortDir") String sortDir,
+            @Param("keyword") String keyword) {
+        Page<User> pageUser = userService.listByPage(pageNum, sortField, sortDir, keyword);
         List<User> listUsers = pageUser.getContent();
         long startCount = (long) (pageNum - 1) * UserService.USERS_PER_PAGE + 1;
         long endCount = startCount + UserService.USERS_PER_PAGE - 1;
@@ -49,11 +54,12 @@ public class UserController {
         model.addAttribute("sortField", sortField);
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("reverseSortDir", reverseSortDir);
+        model.addAttribute("keyword", keyword);
         return "users";
     }
 
     @GetMapping("/users/new")
-    public String newUser(Model model){
+    public String newUser(Model model) {
         User user = new User();
         user.setEnabled(true);
         model.addAttribute("user", user);
@@ -67,7 +73,7 @@ public class UserController {
 
     @PostMapping("/users/save")
     public String saveUser(User user, RedirectAttributes redirectAttributes, @RequestParam("image") MultipartFile multipartFile) throws IOException {
-        if(!multipartFile.isEmpty()){
+        if (!multipartFile.isEmpty()) {
             String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
             user.setPhotos(fileName);
             User savedUser = userService.save(user);
@@ -76,19 +82,19 @@ public class UserController {
 
             FileUploadUtil.cleanDir(uploadDir);
             FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
-        }else {
+        } else {
             if (user.getPhotos().isEmpty()) user.setPhotos(null);
             userService.save(user);
         }
 
 
         userService.save(user);
-        redirectAttributes.addFlashAttribute("message","The user has been saved successfully");
+        redirectAttributes.addFlashAttribute("message", "The user has been saved successfully");
         return "redirect:/users";
     }
 
     @GetMapping("/users/edit/{id}")
-    public String editUser(@PathVariable(name = "id") Integer id,Model model, RedirectAttributes redirectAttributes){
+    public String editUser(@PathVariable(name = "id") Integer id, Model model, RedirectAttributes redirectAttributes) {
         try {
             User user = userService.get(id);
             List<Role> listRoles = userService.listRoles();
@@ -99,8 +105,8 @@ public class UserController {
 
             return "user_form";
 
-        } catch (UserNotFoundException ex){
-            redirectAttributes.addFlashAttribute("message",ex.getMessage());
+        } catch (UserNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("message", ex.getMessage());
             return "redirect:/users";
         }
     }
@@ -110,7 +116,8 @@ public class UserController {
                              Model model,
                              RedirectAttributes redirectAttributes) {
         try {
-            userService.delete(id);;
+            userService.delete(id);
+            ;
             redirectAttributes.addFlashAttribute("message",
                     "The user ID " + id + " has been deleted successfully");
         } catch (UserNotFoundException ex) {

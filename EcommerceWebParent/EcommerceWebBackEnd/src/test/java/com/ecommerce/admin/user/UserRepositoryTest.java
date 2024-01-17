@@ -1,7 +1,9 @@
 package com.ecommerce.admin.user;
+
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import com.ecommerce.common.entity.Role;
 import com.ecommerce.common.entity.User;
 import org.junit.jupiter.api.Test;
@@ -27,18 +29,18 @@ public class UserRepositoryTest {
     private TestEntityManager entityManager;
 
     @Test
-    public void testCreateUserWithOneRole(){
+    public void testCreateUserWithOneRole() {
         User userTranHung = new User("hungtran@gmail.com", "hung2024", "Hung", "Tran");
         Role roleAdmin = entityManager.find(Role.class, 1);
 
         userTranHung.addRole(roleAdmin);
-        User savedUser =  userRepository.save(userTranHung);
+        User savedUser = userRepository.save(userTranHung);
         assertNotEquals(savedUser.getId(), 0);
 
     }
 
     @Test
-    public void testCreateNewUserWithTwoRole(){
+    public void testCreateNewUserWithTwoRole() {
         User userNgocAnh = new User("ngocanh@gmail.com", "hung2024", "Ngoc", "Anh");
         Role roleEditor = new Role(3);
         Role roleAssistant = new Role(5);
@@ -46,12 +48,12 @@ public class UserRepositoryTest {
         userNgocAnh.addRole(roleEditor);
         userNgocAnh.addRole(roleAssistant);
 
-        User savedUser =  userRepository.save(userNgocAnh);
+        User savedUser = userRepository.save(userNgocAnh);
         assertNotEquals(savedUser.getId(), 0);
     }
 
     @Test
-    public void testGetUserByEmail(){
+    public void testGetUserByEmail() {
         String email = "abc@def.com";
         User user = userRepository.findUserByEmail(email);
         assertNull(user);
@@ -62,7 +64,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testListFirstPage(){
+    public void testListFirstPage() {
         int pageNumber = 0;
         int pageSize = 4;
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
@@ -70,5 +72,17 @@ public class UserRepositoryTest {
 
         List<User> listUsers = page.getContent();
         listUsers.forEach(System.out::println);
+    }
+
+    @Test
+    public void testSearchUser() {
+        String keyword = "bruce";
+        int pageNumber = 0;
+        int pageSize = 4;
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<User> page = userRepository.findAll(keyword, pageable);
+
+        List<User> listUsers = page.getContent();
+        assertNotEquals(listUsers.size(), 0);
     }
 }
