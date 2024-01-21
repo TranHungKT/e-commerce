@@ -1,5 +1,6 @@
 package com.ecommerce.admin.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,12 +16,15 @@ import org.springframework.security.config.annotation.web.configurers.LogoutConf
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfiguration {
     @Bean
-    public BCryptPasswordEncoder passwordEncoder(){
+    public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -37,8 +41,18 @@ public class SecurityConfiguration {
 
         return new ProviderManager(authenticationProvider);
     }
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    RememberMeServices rememberMeServices(UserDetailsService userDetailsService) {
+        TokenBasedRememberMeServices.RememberMeTokenAlgorithm encodingAlgorithm = TokenBasedRememberMeServices.RememberMeTokenAlgorithm.SHA256;
+        TokenBasedRememberMeServices rememberMe = new TokenBasedRememberMeServices("AbcDefgHijKlmnOpqrs_1234567890", userDetailsService, encodingAlgorithm);
+        rememberMe.setMatchingAlgorithm(TokenBasedRememberMeServices.RememberMeTokenAlgorithm.MD5);
+        rememberMe.setTokenValiditySeconds(7 * 24 * 60 * 60);
+        return rememberMe;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, RememberMeServices rememberMeServices) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize.anyRequest().authenticated())
                 .formLogin(form -> form
@@ -47,6 +61,8 @@ public class SecurityConfiguration {
                         .permitAll()
                 )
                 .logout(LogoutConfigurer::permitAll)
+                .rememberMe(rememberMe -> rememberMe
+                        .rememberMeServices(rememberMeServices))
         ;
 
 
@@ -59,6 +75,6 @@ public class SecurityConfiguration {
         return (web) -> web.ignoring().requestMatchers("/images/**",
                 "/js/**",
                 "/webjars/**"
-               );
+        );
     }
 }

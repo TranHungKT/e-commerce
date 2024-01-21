@@ -29,14 +29,13 @@ public class UserRepositoryTest {
     private TestEntityManager entityManager;
 
     @Test
-    public void testCreateUserWithOneRole() {
-        User userTranHung = new User("hungtran@gmail.com", "hung2024", "Hung", "Tran");
+    public void testCreateNewUserWithOneRole() {
         Role roleAdmin = entityManager.find(Role.class, 1);
+        User userNamHM = new User("hungtran@gmail.com", "hung2020", "Tran", "Hung");
+        userNamHM.addRole(roleAdmin);
 
-        userTranHung.addRole(roleAdmin);
-        User savedUser = userRepository.save(userTranHung);
+        User savedUser = userRepository.save(userNamHM);
         assertNotEquals(savedUser.getId(), 0);
-
     }
 
     @Test

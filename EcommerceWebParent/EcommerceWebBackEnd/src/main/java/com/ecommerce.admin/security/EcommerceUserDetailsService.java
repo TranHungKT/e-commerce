@@ -3,7 +3,6 @@ package com.ecommerce.admin.security;
 import com.ecommerce.admin.user.UserRepository;
 import com.ecommerce.common.entity.User;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
