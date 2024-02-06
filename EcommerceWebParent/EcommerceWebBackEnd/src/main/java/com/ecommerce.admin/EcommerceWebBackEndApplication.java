@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 @SpringBootApplication
-@EntityScan({"com.ecommerce.common.entity", "com.ecommerce.admin.user"})
+@EntityScan({"com.ecommerce.common.entity"})
 
 public class EcommerceWebBackEndApplication {
 
