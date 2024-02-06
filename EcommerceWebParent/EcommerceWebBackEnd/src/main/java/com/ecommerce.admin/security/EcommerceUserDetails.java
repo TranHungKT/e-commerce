@@ -58,7 +58,7 @@ public class EcommerceUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.isEnabled();
     }
 
     public String getFullname() {

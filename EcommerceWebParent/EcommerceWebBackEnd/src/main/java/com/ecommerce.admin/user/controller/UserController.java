@@ -1,6 +1,8 @@
-package com.ecommerce.admin.user;
+package com.ecommerce.admin.user.controller;
 
 import com.ecommerce.admin.FileUploadUtil;
+import com.ecommerce.admin.user.UserNotFoundException;
+import com.ecommerce.admin.user.UserService;
 import com.ecommerce.admin.user.export.UserCsvExporter;
 import com.ecommerce.admin.user.export.UserExcelExporter;
 import com.ecommerce.admin.user.export.UserPdfExporter;
@@ -59,7 +61,7 @@ public class UserController {
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("reverseSortDir", reverseSortDir);
         model.addAttribute("keyword", keyword);
-        return "users";
+        return "users/users";
     }
 
     @GetMapping("/users/new")
@@ -72,7 +74,7 @@ public class UserController {
         model.addAttribute("listRoles", listRoles);
         model.addAttribute("pageTitle", "Create New User");
 
-        return "user_form";
+        return "users/user_form";
     }
 
     @PostMapping("/users/save")
@@ -110,7 +112,7 @@ public class UserController {
             model.addAttribute("pageTitle", "Edit User (ID: " + id + ")");
             model.addAttribute("listRoles", listRoles);
 
-            return "user_form";
+            return "users/user_form";
 
         } catch (UserNotFoundException ex) {
             redirectAttributes.addFlashAttribute("message", ex.getMessage());

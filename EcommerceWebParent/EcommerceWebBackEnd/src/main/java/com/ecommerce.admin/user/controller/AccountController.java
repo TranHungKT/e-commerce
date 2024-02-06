@@ -1,7 +1,8 @@
-package com.ecommerce.admin.user;
+package com.ecommerce.admin.user.controller;
 
 import com.ecommerce.admin.FileUploadUtil;
 import com.ecommerce.admin.security.EcommerceUserDetails;
+import com.ecommerce.admin.user.UserService;
 import com.ecommerce.common.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,7 +29,7 @@ public class AccountController {
         User user = userService.getUserByEmail(email);
         model.addAttribute("user", user);
 
-        return "account_form";
+        return "users/account_form";
     }
 
     @PostMapping("/account/update")
