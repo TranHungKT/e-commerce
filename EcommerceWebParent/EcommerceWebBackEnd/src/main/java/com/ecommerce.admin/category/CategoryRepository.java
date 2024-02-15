@@ -11,4 +11,7 @@ import java.util.List;
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
     @Query("SELECT c FROM Category c WHERE c.parent.id is NULL")
     public List<Category> findRootCategories();
+
+    public Category findCategoryByName(String name);
+    public Category findCategoryByAlias(String alias);
 }

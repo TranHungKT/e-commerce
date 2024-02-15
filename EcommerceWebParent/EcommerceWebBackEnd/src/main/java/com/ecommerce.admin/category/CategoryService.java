@@ -2,31 +2,37 @@ package com.ecommerce.admin.category;
 
 import com.ecommerce.common.entity.Category;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.expression.Strings;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-@RequiredArgsConstructor
+
 @Service
 public class CategoryService {
-    private final CategoryRepository categoryRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+
 
     public List<Category> listAll() {
         List<Category> rootCategories = categoryRepository.findRootCategories();
         return listHierarchicalCategories(rootCategories);
     }
 
-    private List<Category> listHierarchicalCategories(List<Category> rootCategories){
+    public Category get(Integer id) throws CategoryNotFoundException {
+        return categoryRepository.findById(id).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
+    }
+
+    private List<Category> listHierarchicalCategories(List<Category> rootCategories) {
         List<Category> hierarchicalCategories = new ArrayList<>();
 
-        for(Category rootCategory: rootCategories){
+        for (Category rootCategory : rootCategories) {
             hierarchicalCategories.add(Category.copyFull(rootCategory));
 
             Set<Category> children = rootCategory.getChildren();
 
-            for(Category subCategory : children){
+            for (Category subCategory : children) {
                 String name = "--" + subCategory.getName();
                 hierarchicalCategories.add(Category.copyFull(subCategory, name));
                 listSubHierarchicalCategories(hierarchicalCategories, subCategory, 1);
@@ -77,7 +83,7 @@ public class CategoryService {
         return categoriesUsedInForm;
     }
 
-    public Category save(Category category){
+    public Category save(Category category) {
         return categoryRepository.save(category);
     }
 
@@ -97,5 +103,20 @@ public class CategoryService {
             listSubCategoryUsedInForm(categoriesUsedInForm, subCategory, newSubLevel);
 
         }
+    }
+
+    public String checkUnique(Integer id, String name, String alias) {
+        Category categoryByName = categoryRepository.findCategoryByName(name);
+        Category categoryByAlias = categoryRepository.findCategoryByAlias(alias);
+
+        if (categoryByName != null && !Objects.equals(categoryByName.getId(), id)) {
+            return "DuplicateName";
+        }
+
+        if (categoryByAlias != null && !Objects.equals(categoryByAlias.getId(), id)) {
+            return "DuplicateAlias";
+        }
+
+        return "OK";
     }
 }
