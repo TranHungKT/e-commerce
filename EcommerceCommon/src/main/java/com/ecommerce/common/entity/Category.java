@@ -83,6 +83,7 @@ public class Category {
         copyCategory.setImage(category.getImage());
         copyCategory.setAlias(category.getAlias());
         copyCategory.setEnabled(category.getEnabled());
+        copyCategory.setHasChildren(!category.getChildren().isEmpty());
 
         return copyCategory;
     }
@@ -100,4 +101,7 @@ public class Category {
 
         return "/category-images/" + this.id + "/" + this.image;
     }
+
+    @Transient
+    private boolean hasChildren;
 }

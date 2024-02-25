@@ -126,7 +126,7 @@ public class UserController {
                              RedirectAttributes redirectAttributes) {
         try {
             userService.delete(id);
-            ;
+
             redirectAttributes.addFlashAttribute("message",
                     "The user ID " + id + " has been deleted successfully");
         } catch (UserNotFoundException ex) {

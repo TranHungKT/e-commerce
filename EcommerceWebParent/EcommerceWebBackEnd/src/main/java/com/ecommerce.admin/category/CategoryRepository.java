@@ -20,5 +20,4 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
     @Query("UPDATE Category c SET c.enabled = ?2 WHERE c.id = ?1")
     @Modifying
     public void updateEnabledStatus(Integer id, Boolean enabled);
-
 }

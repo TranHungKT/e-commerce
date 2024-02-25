@@ -95,6 +95,12 @@ public class CategoryService {
         categoryRepository.updateEnabledStatus(id, enabled);
     }
 
+    public void deleteCategory(Integer id) throws CategoryNotFoundException {
+        categoryRepository.findById(id).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
+
+        categoryRepository.deleteById(id);
+    }
+
 
     private void listSubCategoryUsedInForm(List<Category> categoriesUsedInForm, Category parent, int subLevel) {
         int newSubLevel = subLevel + 1;
