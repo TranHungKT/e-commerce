@@ -3,6 +3,7 @@ package com.ecommerce.admin.category;
 import com.ecommerce.admin.FileUploadUtil;
 import com.ecommerce.common.entity.Category;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -22,10 +23,15 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/categories")
-    public String listAll(Model model) {
-        List<Category> listCategories = categoryService.listAll();
+    public String listAll(
+            @RequestParam(value = "sortDir", defaultValue = "sortDir", required = false) String sortDir,
+            Model model
+    ) {
+        List<Category> listCategories = categoryService.listAll(sortDir);
+        String reverseSortDir = sortDir.equals("asc") ? "desc" : "asc";
 
         model.addAttribute("listCategories", listCategories);
+        model.addAttribute("reverseSortDir", reverseSortDir);
 
         return "categories/categories";
     }
@@ -78,5 +84,15 @@ public class CategoryController {
         }
     }
 
+    @GetMapping("/categories/{id}/enabled/{status}")
+    public String updatedCategoryEnabledStatus(@PathVariable("id") Integer id, @PathVariable("status") boolean enabled, RedirectAttributes redirectAttributes
+    ) {
+        categoryService.updateCategoryEnabledStatus(id, enabled);
+
+        String status = enabled ? "enabled" : "disabled";
+        String message = "The category ID " + id + "has been " + status;
+        redirectAttributes.addFlashAttribute("message", message);
+        return "redirect:/categories";
+    }
 
 }

@@ -1,36 +1,40 @@
 package com.ecommerce.admin.category;
 
 import com.ecommerce.common.entity.Category;
-import lombok.RequiredArgsConstructor;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.expression.Strings;
+
 
 import java.util.*;
 
 
 @Service
+@Transactional
 public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    public List<Category> listAll(String sortDir) {
+        Sort sort = Sort.by("name");
+        sort = sortDir.equals("asc") ? sort.ascending() : sort.descending();
 
-    public List<Category> listAll() {
-        List<Category> rootCategories = categoryRepository.findRootCategories();
-        return listHierarchicalCategories(rootCategories);
+        List<Category> rootCategories = categoryRepository.findRootCategories(sort);
+        return listHierarchicalCategories(rootCategories, sortDir);
     }
 
     public Category get(Integer id) throws CategoryNotFoundException {
         return categoryRepository.findById(id).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
     }
 
-    private List<Category> listHierarchicalCategories(List<Category> rootCategories) {
+    private List<Category> listHierarchicalCategories(List<Category> rootCategories, String sortDir) {
         List<Category> hierarchicalCategories = new ArrayList<>();
 
         for (Category rootCategory : rootCategories) {
             hierarchicalCategories.add(Category.copyFull(rootCategory));
 
-            Set<Category> children = rootCategory.getChildren();
+            Set<Category> children = sortSubCategories(rootCategory.getChildren(), sortDir);
 
             for (Category subCategory : children) {
                 String name = "--" + subCategory.getName();
@@ -43,7 +47,7 @@ public class CategoryService {
 
     private void listSubHierarchicalCategories(List<Category> hierarchicalCategories,
                                                Category parent, int subLevel) {
-        Set<Category> children = parent.getChildren();
+        Set<Category> children = sortSubCategories(parent.getChildren());
         int newSubLevel = subLevel + 1;
 
         for (Category subCategory : children) {
@@ -69,7 +73,7 @@ public class CategoryService {
             if (category.getParent() == null) {
                 categoriesUsedInForm.add(Category.copyIdAndName(category));
 
-                Set<Category> children = category.getChildren();
+                Set<Category> children = sortSubCategories( category.getChildren());
 
                 for (Category subCategory : children) {
                     String name = "--" + subCategory.getName();
@@ -87,9 +91,14 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
+    public void updateCategoryEnabledStatus(Integer id, Boolean enabled){
+        categoryRepository.updateEnabledStatus(id, enabled);
+    }
+
+
     private void listSubCategoryUsedInForm(List<Category> categoriesUsedInForm, Category parent, int subLevel) {
         int newSubLevel = subLevel + 1;
-        Set<Category> children = parent.getChildren();
+        Set<Category> children = sortSubCategories(parent.getChildren());
 
         for (Category subCategory : children) {
             String name = "";
@@ -118,5 +127,26 @@ public class CategoryService {
         }
 
         return "OK";
+    }
+
+    private SortedSet<Category> sortSubCategories(Set<Category> children){
+        return sortSubCategories(children, "asc");
+    }
+
+    private SortedSet<Category> sortSubCategories(Set<Category> children, String sortDir) {
+        SortedSet<Category> sortedChildren = new TreeSet<>(new Comparator<Category>() {
+            @Override
+            public int compare(Category cat1, Category cat2) {
+                if (sortDir.equals("asc")) {
+                    return cat1.getName().compareTo(cat2.getName());
+                } else {
+                    return cat2.getName().compareTo(cat1.getName());
+                }
+            }
+        });
+
+        sortedChildren.addAll(children);
+
+        return sortedChildren;
     }
 }
