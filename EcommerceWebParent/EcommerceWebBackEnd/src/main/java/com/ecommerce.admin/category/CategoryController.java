@@ -23,12 +23,26 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/categories")
-    public String listAll(
-            @RequestParam(value = "sortDir", defaultValue = "sortDir", required = false) String sortDir,
+    public String listFirstPage(@RequestParam(value = "sortDir", defaultValue = "asc", required = false) String sortDir, Model model) {
+        return listByPage(1, sortDir, model);
+    }
+
+    @GetMapping("/categories/page/{pageNum}")
+    public String listByPage(
+            @PathVariable(name = "pageNum") int pageNum,
+            @RequestParam(value = "sortDir", defaultValue = "asc", required = false) String sortDir,
             Model model
     ) {
-        List<Category> listCategories = categoryService.listAll(sortDir);
+        CategoryPageInfo categoryPageInfo = new CategoryPageInfo();
+
+        List<Category> listCategories = categoryService.listByPage(categoryPageInfo, pageNum, sortDir);
         String reverseSortDir = sortDir.equals("asc") ? "desc" : "asc";
+
+        model.addAttribute("totalPages", categoryPageInfo.getTotalPages());
+        model.addAttribute("totalItems", categoryPageInfo.getTotalElements());
+        model.addAttribute("currentPage", pageNum);
+        model.addAttribute("sortField", "name");
+        model.addAttribute("sortDir", sortDir);
 
         model.addAttribute("listCategories", listCategories);
         model.addAttribute("reverseSortDir", reverseSortDir);
@@ -96,7 +110,7 @@ public class CategoryController {
     }
 
     @GetMapping("categories/delete/{id}")
-    public String deleteCategory(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes){
+    public String deleteCategory(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
         try {
             categoryService.deleteCategory(id);
 
@@ -105,7 +119,7 @@ public class CategoryController {
 
             redirectAttributes.addFlashAttribute("message",
                     "The category ID " + id + " has been deleted successfully");
-        }catch (CategoryNotFoundException ex){
+        } catch (CategoryNotFoundException ex) {
             redirectAttributes.addFlashAttribute("message", ex.getMessage());
         }
         return "redirect:/categories";

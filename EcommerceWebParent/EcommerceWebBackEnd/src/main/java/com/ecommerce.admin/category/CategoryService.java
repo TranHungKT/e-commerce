@@ -3,6 +3,9 @@ package com.ecommerce.admin.category;
 import com.ecommerce.common.entity.Category;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,8 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    private static final int CATEGORY_PER_PAGE = 4;
+
     public List<Category> listAll(String sortDir) {
         Sort sort = Sort.by("name");
         sort = sortDir.equals("asc") ? sort.ascending() : sort.descending();
@@ -23,6 +28,20 @@ public class CategoryService {
         List<Category> rootCategories = categoryRepository.findRootCategories(sort);
         return listHierarchicalCategories(rootCategories, sortDir);
     }
+
+    public List<Category> listByPage(CategoryPageInfo categoryPageInfo, int pageNum, String sortDir) {
+        Sort sort = Sort.by("name");
+        sort = sortDir.equals("asc") ? sort.ascending() : sort.descending();
+        Pageable pageable = PageRequest.of(pageNum - 1, CATEGORY_PER_PAGE, sort);
+        Page<Category> pageCategories = categoryRepository.findRootCategories(pageable);
+        List<Category> rootCategories = pageCategories.getContent();
+
+        categoryPageInfo.setTotalPages(pageCategories.getTotalPages());
+        categoryPageInfo.setTotalElements(pageCategories.getTotalElements());
+
+        return listHierarchicalCategories(rootCategories, sortDir);
+    }
+
 
     public Category get(Integer id) throws CategoryNotFoundException {
         return categoryRepository.findById(id).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
