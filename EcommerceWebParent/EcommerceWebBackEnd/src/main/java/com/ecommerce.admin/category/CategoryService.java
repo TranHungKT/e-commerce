@@ -8,6 +8,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.thymeleaf.expression.Strings;
 
 
 import java.util.*;
@@ -29,19 +31,44 @@ public class CategoryService {
         return listHierarchicalCategories(rootCategories, sortDir);
     }
 
-    public List<Category> listByPage(CategoryPageInfo categoryPageInfo, int pageNum, String sortDir) {
+    public List<Category> listByPage(CategoryPageInfo categoryPageInfo, int pageNum, String sortDir, String keyword) {
         Sort sort = Sort.by("name");
         sort = sortDir.equals("asc") ? sort.ascending() : sort.descending();
         Pageable pageable = PageRequest.of(pageNum - 1, CATEGORY_PER_PAGE, sort);
-        Page<Category> pageCategories = categoryRepository.findRootCategories(pageable);
-        List<Category> rootCategories = pageCategories.getContent();
 
+        if (isEmptyString(keyword)) {
+            return findCategoryWithPagination(pageable, categoryPageInfo, sortDir);
+        }
+        return searchCategories(keyword, pageable, categoryPageInfo);
+    }
+
+    private void setPageInfo(CategoryPageInfo categoryPageInfo, Page<Category> pageCategories) {
         categoryPageInfo.setTotalPages(pageCategories.getTotalPages());
         categoryPageInfo.setTotalElements(pageCategories.getTotalElements());
+    }
+
+    private List<Category> searchCategories(String keyword, Pageable pageable, CategoryPageInfo categoryPageInfo) {
+        Page<Category> pageCategories = categoryRepository.search(keyword, pageable);
+        setPageInfo(categoryPageInfo, pageCategories);
+        List<Category> searchResult = pageCategories.getContent();
+        for (Category category : searchResult) {
+            category.setHasChildren(!category.getChildren().isEmpty());
+        }
+
+        return searchResult;
+    }
+
+    private List<Category> findCategoryWithPagination(Pageable pageable, CategoryPageInfo categoryPageInfo, String sortDir) {
+        Page<Category> pageCategories = categoryRepository.findRootCategories(pageable);
+        setPageInfo(categoryPageInfo, pageCategories);
+        List<Category> rootCategories = pageCategories.getContent();
 
         return listHierarchicalCategories(rootCategories, sortDir);
     }
 
+    private Boolean isEmptyString(String key) {
+        return key == null || key.isEmpty();
+    }
 
     public Category get(Integer id) throws CategoryNotFoundException {
         return categoryRepository.findById(id).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
@@ -92,7 +119,7 @@ public class CategoryService {
             if (category.getParent() == null) {
                 categoriesUsedInForm.add(Category.copyIdAndName(category));
 
-                Set<Category> children = sortSubCategories( category.getChildren());
+                Set<Category> children = sortSubCategories(category.getChildren());
 
                 for (Category subCategory : children) {
                     String name = "--" + subCategory.getName();
@@ -110,7 +137,7 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    public void updateCategoryEnabledStatus(Integer id, Boolean enabled){
+    public void updateCategoryEnabledStatus(Integer id, Boolean enabled) {
         categoryRepository.updateEnabledStatus(id, enabled);
     }
 
@@ -154,7 +181,7 @@ public class CategoryService {
         return "OK";
     }
 
-    private SortedSet<Category> sortSubCategories(Set<Category> children){
+    private SortedSet<Category> sortSubCategories(Set<Category> children) {
         return sortSubCategories(children, "asc");
     }
 
