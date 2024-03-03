@@ -56,7 +56,7 @@ public class SecurityConfiguration {
         http
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/users/**").hasAuthority("Admin")
-                        .requestMatchers("/categories/**").hasAnyAuthority("Admin", "Editor")
+                        .requestMatchers("/categories/**","/brands/**").hasAnyAuthority("Admin", "Editor")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
