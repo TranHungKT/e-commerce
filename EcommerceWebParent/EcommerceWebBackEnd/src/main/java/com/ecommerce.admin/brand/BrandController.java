@@ -5,6 +5,8 @@ import com.ecommerce.admin.category.CategoryService;
 import com.ecommerce.common.entity.Brand;
 import com.ecommerce.common.entity.Category;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,8 +28,37 @@ public class BrandController {
     private final CategoryService categoryService;
 
     @GetMapping("/brands")
-    public String listBrands(Model model) {
-        List<Brand> listBrands = brandService.listAll();
+    public String listFirstPage(Model model) {
+        return listByPage(1, "name", "asc", null, model);
+    }
+
+    @GetMapping("/brands/page/{pageNum}")
+    public String listByPage(
+            @PathVariable("pageNum") Integer pageNum,
+            @RequestParam(value = "sortField", defaultValue = "name", required = false) String sortField,
+            @RequestParam(value = "sortDir", defaultValue = "asc", required = false) String sortDir,
+            @Param(value = "keyword") String keyword,
+            Model model) {
+        Page<Brand> page = brandService.listByPage(pageNum, sortField, sortDir, keyword);
+        List<Brand> listBrands = page.getContent();
+
+        long startCount = (long) (pageNum - 1) * BrandService.BRANDS_PER_PAGE + 1;
+        long endCount = startCount + BrandService.BRANDS_PER_PAGE - 1;
+        if (endCount > page.getTotalElements()) {
+            endCount = page.getTotalElements();
+        }
+
+        String reverseSortDir = sortDir.equals("asc") ? "desc" : "asc";
+
+        model.addAttribute("currentPage", pageNum);
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("startCount", startCount);
+        model.addAttribute("endCount", endCount);
+        model.addAttribute("totalItems", page.getTotalElements());
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortDir", sortDir);
+        model.addAttribute("reverseSortDir", reverseSortDir);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("listBrands", listBrands);
 
         return "brands/brands";
@@ -47,7 +78,7 @@ public class BrandController {
     }
 
     @GetMapping("/brands/edit/{id}")
-    public String editBrand(@PathVariable("id") Integer id, Model model, RedirectAttributes redirectAttributes){
+    public String editBrand(@PathVariable("id") Integer id, Model model, RedirectAttributes redirectAttributes) {
         try {
             Brand brand = brandService.getBrandById(id);
             List<Category> listCategories = categoryService.listCategoriesUsedInForm();
@@ -76,8 +107,7 @@ public class BrandController {
             String uploadDir = "../brand-logos/" + savedBrand.getId();
             FileUploadUtil.cleanDir(uploadDir);
             FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
-        }
-        else  {
+        } else {
             brandService.saveBrand(brand);
         }
 
@@ -86,7 +116,7 @@ public class BrandController {
     }
 
     @GetMapping("brands/delete/{id}")
-    public String deleteBrand(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes){
+    public String deleteBrand(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
         try {
             brandService.deleteBrandById(id);
 
